@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "env": {
+    "WEATHERAPI_KEY": "c3f6af1ef0524753a1c131335262210"
+  },
+  "routes": [
+    {
+      "src": "/api/weather",
+      "dest": "/api/weather.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
