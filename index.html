@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>weather — SAME SKY. A BRIGHTER DAY.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0c;
+      --surface: #121418;
+      --surface-border: #1f232b;
+      --surface-hover: #191c22;
+      --text-primary: #f3f4f6;
+      --text-secondary: #8b929d;
+      --text-muted: #525866;
+      --accent: #ffffff;
+      --mood-green: #34d399;
+      --mood-red: #f87171;
+      --mood-blue: #60a5fa;
+      --mood-amber: #fbbf24;
+      --glow: rgba(255, 255, 255, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2.5rem 1.25rem 4rem;
+      background-image: 
+        radial-gradient(ellipse at 50% -10%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 85% 15%, rgba(255, 140, 0, 0.05) 0%, transparent 35%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-sub {
+      display: block;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-tag {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-align: right;
+      line-height: 1.3;
+    }
+
+    /* Hero */
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 span {
+      color: var(--text-muted);
+    }
+
+    /* Search Box */
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 1.1rem 3.5rem 1.1rem 3rem;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: #4b5563;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1.2rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-btn {
+      position: absolute;
+      right: 0.5rem;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #fff;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease;
+    }
+
+    .search-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Chips */
+    .chips-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      scrollbar-width: none;
+    }
+
+    .chips-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .chip:hover, .chip.active {
+      color: #fff;
+      border-color: #4b5563;
+      background: var(--surface-hover);
+    }
+
+    .chip.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+    }
+
+    /* Weather Hero Display */
+    .main-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 28px;
+      padding: 2.2rem;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .weather-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .city-info h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .region-info {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+    }
+
+    .temp-container {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin: 1.75rem 0 0.5rem;
+    }
+
+    .temp-text {
+      font-size: 4.5rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .temp-unit {
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      vertical-align: super;
+    }
+
+    .weather-condition {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .condition-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+
+    /* Mood Module */
+    .mood-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .mood-title {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .mood-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .mood-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Secondary Metric Grid */
+    .grid-metrics {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.75rem;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 18px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .metric-status {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    /* API Inspector */
+    .inspector-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 1.75rem;
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .inspector-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--surface-border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      color: #000;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .code-wrapper {
+      background: #060708;
+      border-radius: 14px;
+      padding: 1.25rem;
+      border: 1px solid #17191e;
+      overflow-x: auto;
+      max-height: 480px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    /* JSON Syntax Coloring */
+    .json-key { color: #f472b6; }
+    .json-str { color: #34d399; }
+    .json-num { color: #60a5fa; }
+    .json-bool { color: #fbbf24; }
+    .json-null { color: #a78bfa; }
+
+    /* Alert / Empty states */
+    .status-msg {
+      padding: 1rem;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 12px;
+      color: #fca5a5;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .main-card { grid-template-columns: 1fr; }
+      .grid-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-group">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        <div>
+          <div class="logo-title">weather</div>
+          <span class="logo-sub">Same sky. A brighter day.</span>
+        </div>
+      </div>
+      <div class="header-tag">
+        Real-time weather<br>for a better you
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Check the weather.<br><span>Plan a better day.</span></h1>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="cityInput" class="search-input" placeholder="Enter a city (e.g. New Delhi)" autocomplete="off" />
+        <button id="searchBtn" class="search-btn" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Top Chips (PRD FR-2) -->
+    <div class="chips-wrapper" id="chipsList">
+      <button class="chip active">New Delhi</button>
+      <button class="chip">Mumbai</button>
+      <button class="chip">Bengaluru</button>
+      <button class="chip">Hyderabad</button>
+      <button class="chip">Chennai</button>
+      <button class="chip">Kolkata</button>
+      <button class="chip">Pune</button>
+      <button class="chip">Patna</button>
+      <button class="chip">Jaipur</button>
+      <button class="chip">London</button>
+      <button class="chip">Mangalore</button>
+      <button class="chip">Ramanathapuram</button>
+    </div>
+
+    <div id="errorBox" class="status-msg"></div>
+
+    <!-- Weather Main Hero Card -->
+    <div class="main-card">
+      <div class="weather-left">
+        <div class="city-info">
+          <h2 id="cityName">New Delhi</h2>
+          <div class="region-info" id="regionInfo">Delhi, India • Tue, 21 Oct 04:32 PM</div>
+        </div>
+
+        <div>
+          <div class="temp-container">
+            <img id="weatherIcon" src="" alt="" style="width: 64px; height: 64px;" />
+            <div class="temp-text" id="tempVal">--<span class="temp-unit">°C</span></div>
+          </div>
+          <div class="weather-condition" id="conditionText">Loading...</div>
+          <div class="condition-desc" id="conditionSub">Clear skies and bright.</div>
+        </div>
+      </div>
+
+      <div class="mood-box">
+        <div class="mood-title">Today's Mood</div>
+        <div class="mood-badge" id="moodTitle">Pleasant</div>
+        <div class="mood-desc" id="moodDesc">Optimal comfort with clear ambient conditions.</div>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid-metrics">
+      <div class="metric-card">
+        <div class="metric-label">Feels like</div>
+        <div class="metric-val" id="metricFeels">--°</div>
+        <div class="metric-status">Thermal index</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Humidity</div>
+        <div class="metric-val" id="metricHum">--%</div>
+        <div class="metric-status" id="humStatus">Optimal</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Wind speed</div>
+        <div class="metric-val" id="metricWind">-- km/h</div>
+        <div class="metric-status" id="windStatus">Gentle</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Visibility</div>
+        <div class="metric-val" id="metricVis">-- km</div>
+        <div class="metric-status">Clear view</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">UV Index</div>
+        <div class="metric-val" id="metricUv">--</div>
+        <div class="metric-status" id="uvStatus">Moderate</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Cloud cover</div>
+        <div class="metric-val" id="metricCloud">--%</div>
+        <div class="metric-status">Sky coverage</div>
+      </div>
+    </div>
+
+    <!-- API Inspector Card (PRD FR-5) -->
+    <div class="inspector-card">
+      <div class="inspector-header">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 700;">API Response</h3>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">View raw weather data from WeatherAPI</div>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <div class="inspector-tabs">
+            <button class="tab-btn" id="rawTab">Raw JSON</button>
+            <button class="tab-btn active" id="formattedTab">Formatted JSON</button>
+          </div>
+          <button class="copy-btn" id="copyBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            Copy JSON
+          </button>
+        </div>
+      </div>
+      <pre class="code-wrapper"><code id="jsonDisplay"></code></pre>
+    </div>
+  </div>
+
+  <script>
+    let currentRawData = null;
+    let activeTab = 'formatted';
+
+    // PRD FR-4: Deterministic Mood Engine
+    function calculateMood(temp, humidity, wind) {
+      if (temp >= 38) {
+        return {
+          title: 'Scorching',
+          color: 'var(--mood-red)',
+          desc: 'Intense thermal conditions. Stay hydrated and avoid peak afternoon sun.'
+        };
+      }
+      if (temp <= 5) {
+        return {
+          title: 'Freezing',
+          color: 'var(--mood-blue)',
+          desc: 'Sharp chill in the air. Heavy layer protection recommended.'
+        };
+      }
+      if (humidity >= 80 && temp >= 28) {
+        return {
+          title: 'Muggy',
+          color: 'var(--mood-amber)',
+          desc: 'High atmospheric moisture with heat. Air circulation will help.'
+        };
+      }
+      if (wind >= 30) {
+        return {
+          title: 'Windy',
+          color: 'var(--mood-blue)',
+          desc: 'Strong gusts and active breezes outside.'
+        };
+      }
+      if (temp >= 20 && temp <= 30 && humidity <= 60 && wind <= 20) {
+        return {
+          title: 'Pleasant',
+          color: 'var(--mood-green)',
+          desc: 'Warm and sunny with low humidity. A great day to be out and about.'
+        };
+      }
+      if (temp >= 15 && temp <= 30 && humidity <= 75 && wind <= 30) {
+        return {
+          title: 'Comfortable',
+          color: 'var(--mood-green)',
+          desc: 'Balanced ambient temperatures and manageable conditions.'
+        };
+      }
+      return {
+        title: 'Mixed',
+        color: 'var(--text-secondary)',
+        desc: 'Varied weather patterns across current metrics.'
+      };
+    }
+
+    // Syntax Highlighting for Formatted JSON
+    function syntaxHighlight(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, null, 2);
+      }
+      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-num';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-str';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-bool';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+
+    async function fetchWeather(city) {
+      const errorBox = document.getElementById('errorBox');
+      errorBox.style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error?.message || data.error || 'Failed to fetch weather data.');
+        }
+
+        currentRawData = data;
+        updateUI(data);
+      } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.style.display = 'block';
+      }
+    }
+
+    function updateUI(data) {
+      const { location, current } = data;
+
+      document.getElementById('cityName').textContent = location.name;
+      document.getElementById('regionInfo').textContent = `${location.region ? location.region + ', ' : ''}${location.country} • ${location.localtime}`;
+      document.getElementById('tempVal').innerHTML = `${Math.round(current.temp_c)}<span class="temp-unit">°C</span>`;
+      document.getElementById('weatherIcon').src = current.condition.icon.startsWith('//') ? 'https:' + current.condition.icon : current.condition.icon;
+      document.getElementById('conditionText').textContent = current.condition.text;
+
+      // Mood Engine
+      const mood = calculateMood(current.temp_c, current.humidity, current.wind_kph);
+      const moodTitleEl = document.getElementById('moodTitle');
+      moodTitleEl.textContent = mood.title;
+      moodTitleEl.style.color = mood.color;
+      document.getElementById('moodDesc').textContent = mood.desc;
+
+      // Metrics
+      document.getElementById('metricFeels').textContent = `${Math.round(current.feelslike_c)}°`;
+      document.getElementById('metricHum').textContent = `${current.humidity}%`;
+      document.getElementById('humStatus').textContent = current.humidity > 70 ? 'High' : current.humidity < 30 ? 'Dry' : 'Optimal';
+      document.getElementById('metricWind').textContent = `${current.wind_kph} km/h`;
+      document.getElementById('windStatus').textContent = current.wind_kph > 25 ? 'Breezy' : 'Gentle';
+      document.getElementById('metricVis').textContent = `${current.vis_km} km`;
+      document.getElementById('metricUv').textContent = current.uv;
+      document.getElementById('uvStatus').textContent = current.uv >= 6 ? 'High' : current.uv >= 3 ? 'Moderate' : 'Low';
+      document.getElementById('metricCloud').textContent = `${current.cloud}%`;
+
+      renderInspector();
+    }
+
+    function renderInspector() {
+      const display = document.getElementById('jsonDisplay');
+      if (!currentRawData) return;
+
+      if (activeTab === 'raw') {
+        display.textContent = JSON.stringify(currentRawData);
+      } else {
+        display.innerHTML = syntaxHighlight(currentRawData);
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const val = document.getElementById('cityInput').value.trim();
+      if (val) fetchWeather(val);
+    });
+
+    document.getElementById('cityInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (val) fetchWeather(val);
+      }
+    });
+
+    // Top chips
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        fetchWeather(chip.textContent.trim());
+      });
+    });
+
+    // Inspector tab switching
+    document.getElementById('rawTab').addEventListener('click', () => {
+      activeTab = 'raw';
+      document.getElementById('rawTab').classList.add('active');
+      document.getElementById('formattedTab').classList.remove('active');
+      renderInspector();
+    });
+
+    document.getElementById('formattedTab').addEventListener('click', () => {
+      activeTab = 'formatted';
+      document.getElementById('formattedTab').classList.add('active');
+      document.getElementById('rawTab').classList.remove('active');
+      renderInspector();
+    });
+
+    // Copy to clipboard
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      if (!currentRawData) return;
+      const str = activeTab === 'raw' ? JSON.stringify(currentRawData) : JSON.stringify(currentRawData, null, 2);
+      navigator.clipboard.writeText(str).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const orig = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+      });
+    });
+
+    // Initial load
+    fetchWeather('New Delhi');
+  </script>
+</body>
+</html>
